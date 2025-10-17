@@ -50,7 +50,17 @@ body {
   padding: 0 1rem;
 }
 
-/* Header */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem 0;
+}
+
 .header {
   background: var(--bg-color);
   border-bottom: 1px solid var(--border-color);
@@ -104,6 +114,12 @@ body {
   color: white;
 }
 
+.header-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
 .theme-toggle {
   background: none;
   border: 1px solid var(--border-color);
@@ -118,7 +134,6 @@ body {
   background: var(--bg-secondary);
 }
 
-/* Buttons */
 .btn {
   padding: 0.5rem 1rem;
   border: none;
@@ -172,7 +187,6 @@ body {
   font-size: 1rem;
 }
 
-/* Hero Section */
 .hero-section {
   padding: 4rem 0;
   text-align: center;
@@ -223,7 +237,6 @@ body {
   gap: 1rem;
 }
 
-/* List Section */
 .list-section {
   padding: 2rem 0;
 }
@@ -262,29 +275,23 @@ body {
   color: var(--text-color);
 }
 
-.import-section {
-  background: var(--bg-secondary);
-  padding: 1rem;
-  border-radius: 0.5rem;
-  margin-bottom: 2rem;
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-secondary);
 }
 
-.import-section textarea {
-  flex: 1;
-  padding: 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  background: var(--bg-color);
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
   color: var(--text-color);
-  font-family: monospace;
-  font-size: 0.875rem;
-  resize: vertical;
 }
 
-/* Portfolio Grid */
 .portfolio-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -353,16 +360,14 @@ body {
 .portfolio-actions {
   display: flex;
   gap: 0.5rem;
-  flex-wrap: wrap;
 }
 
 .portfolio-actions .btn {
   flex: 1;
-  min-width: 80px;
+  min-width: 100px;
   justify-content: center;
 }
 
-/* Skill Tags */
 .skill-tag {
   display: inline-flex;
   align-items: center;
@@ -400,7 +405,6 @@ body {
   line-height: 1;
 }
 
-/* View Section */
 .view-section {
   padding: 2rem 0;
 }
@@ -519,7 +523,6 @@ body {
   padding: 2rem;
 }
 
-/* Create Section */
 .create-section {
   padding: 2rem 0;
 }
@@ -634,4 +637,36 @@ body {
 .project-item {
   display: flex;
   justify-content: space-between;
-  align-items
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-color);
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.project-content {
+  flex: 1;
+}
+
+.project-content h5 {
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-color);
+}
+
+.project-content p {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.footer {
+  background: var(--bg-secondary);
+  border-top
