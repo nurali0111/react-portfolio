@@ -1,405 +1,435 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 
 function App() {
-  const [activeTab, setActiveTab] = useState('view')
-  const [portfolios, setPortfolios] = useState([])
-  const [currentPortfolio, setCurrentPortfolio] = useState(null)
+  const [activeTab, setActiveTab] = useState("view");
+  const [portfolios, setPortfolios] = useState([]);
+  const [currentPortfolio, setCurrentPortfolio] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState("desc");
 
   const [formData, setFormData] = useState({
-    name: '',
-    profession: '',
-    about: '',
-    email: '',
-    phone: '',
+    name: "",
+    profession: "",
+    about: "",
+    email: "",
+    phone: "",
+    photo: "",
     skills: [],
-    projects: []
-  })
+    projects: [],
+  });
 
-  const [newSkill, setNewSkill] = useState('')
-  const [newProject, setNewProject] = useState({ title: '', description: '' })
+  const [newSkill, setNewSkill] = useState("");
+  const [newProject, setNewProject] = useState({ title: "", description: "" });
 
+  // Загрузка портфолио из localStorage
   useEffect(() => {
-    const savedPortfolios = localStorage.getItem('portfolios')
+    const savedPortfolios = localStorage.getItem("portfolios");
     if (savedPortfolios) {
-      setPortfolios(JSON.parse(savedPortfolios))
+      setPortfolios(JSON.parse(savedPortfolios));
     }
-  }, [])
+  }, []);
 
+  // Сохранение портфолио
   useEffect(() => {
-    localStorage.setItem('portfolios', JSON.stringify(portfolios))
-  }, [portfolios])
+    localStorage.setItem("portfolios", JSON.stringify(portfolios));
+  }, [portfolios]);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
+    const { name, value } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
-    }))
-  }
+      [name]: value,
+    }));
+  };
 
   const addSkill = () => {
     if (newSkill.trim() && !formData.skills.includes(newSkill.trim())) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        skills: [...prev.skills, newSkill.trim()]
-      }))
-      setNewSkill('')
+        skills: [...prev.skills, newSkill.trim()],
+      }));
+      setNewSkill("");
     }
-  }
+  };
 
   const removeSkill = (skillToRemove) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      skills: prev.skills.filter(skill => skill !== skillToRemove)
-    }))
-  }
+      skills: prev.skills.filter((skill) => skill !== skillToRemove),
+    }));
+  };
 
   const addProject = () => {
     if (newProject.title.trim() && newProject.description.trim()) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        projects: [...prev.projects, { ...newProject, id: Date.now() }]
-      }))
-      setNewProject({ title: '', description: '' })
+        projects: [...prev.projects, { ...newProject, id: Date.now() }],
+      }));
+      setNewProject({ title: "", description: "" });
     }
-  }
+  };
 
   const removeProject = (projectId) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      projects: prev.projects.filter(project => project.id !== projectId)
-    }))
-  }
+      projects: prev.projects.filter((project) => project.id !== projectId),
+    }));
+  };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    const newPortfolio = {
-      id: Date.now(),
-      ...formData,
-      createdAt: new Date().toISOString()
+    e.preventDefault();
+
+    if (editMode) {
+      // Обновление существующего
+      setPortfolios((prev) =>
+        prev.map((p) =>
+          p.id === currentPortfolio.id ? { ...p, ...formData } : p
+        )
+      );
+      setEditMode(false);
+      alert("Портфолио обновлено!");
+    } else {
+      // Создание нового
+      const newPortfolio = {
+        id: Date.now(),
+        ...formData,
+        createdAt: new Date().toISOString(),
+      };
+      setPortfolios((prev) => [...prev, newPortfolio]);
+      alert("Портфолио успешно создано!");
     }
-    
-    setPortfolios(prev => [...prev, newPortfolio])
+
+    // Очистка формы
     setFormData({
-      name: '',
-      profession: '',
-      about: '',
-      email: '',
-      phone: '',
+      name: "",
+      profession: "",
+      about: "",
+      email: "",
+      phone: "",
+      photo: "",
       skills: [],
-      projects: []
-    })
-    alert('Портфолио успешно создано!')
-  }
+      projects: [],
+    });
+    setActiveTab("list");
+  };
 
   const viewPortfolio = (portfolio) => {
-    setCurrentPortfolio(portfolio)
-    setActiveTab('view')
-  }
+    setCurrentPortfolio(portfolio);
+    setActiveTab("view");
+  };
 
   const deletePortfolio = (portfolioId) => {
-    if (confirm('Вы уверены, что хотите удалить это портфолио?')) {
-      setPortfolios(prev => prev.filter(p => p.id !== portfolioId))
+    if (confirm("Вы уверены, что хотите удалить это портфолио?")) {
+      setPortfolios((prev) => prev.filter((p) => p.id !== portfolioId));
       if (currentPortfolio && currentPortfolio.id === portfolioId) {
-        setCurrentPortfolio(null)
+        setCurrentPortfolio(null);
       }
     }
-  }
+  };
+
+  const editPortfolio = (portfolio) => {
+    setFormData(portfolio);
+    setEditMode(true);
+    setCurrentPortfolio(portfolio);
+    setActiveTab("create");
+  };
+
+  // Поиск и сортировка
+  const filteredPortfolios = portfolios
+    .filter(
+      (p) =>
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.profession.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) =>
+      sortOrder === "desc"
+        ? new Date(b.createdAt) - new Date(a.createdAt)
+        : new Date(a.createdAt) - new Date(b.createdAt)
+    );
 
   return (
     <div>
-      {/* Header */}
       <header>
         <div className="container">
           <nav>
-            <div className="logo">Portfolio</div>
+            <div className="logo">🌐 Portfolio Hub</div>
             <ul className="nav-links">
-              <li><a href="#" onClick={() => setActiveTab('list')}>Все портфолио</a></li>
-              <li><a href="#" onClick={() => setActiveTab('view')}>Просмотр</a></li>
-              <li><a href="#" onClick={() => setActiveTab('create')}>Создать</a></li>
+              <li>
+                <a href="#" onClick={() => setActiveTab("list")}>
+                  Все портфолио
+                </a>
+              </li>
+              <li>
+                <a href="#" onClick={() => setActiveTab("view")}>
+                  Просмотр
+                </a>
+              </li>
+              <li>
+                <a href="#" onClick={() => setActiveTab("create")}>
+                  {editMode ? "Редактировать" : "Создать"}
+                </a>
+              </li>
             </ul>
           </nav>
         </div>
       </header>
 
       <div className="main-content container">
-        {/* Tabs */}
-        <div className="tabs">
-           <button 
-            className={`tab ${activeTab === 'list' ? 'active' : ''}`}
-            onClick={() => setActiveTab('list')}
-          >
-            Все портфолио ({portfolios.length})
-          </button>
-          <button 
-            className={`tab ${activeTab === 'view' ? 'active' : ''}`}
-            onClick={() => setActiveTab('view')}
-          >
-            Просмотр
-          </button>
-          <button 
-            className={`tab ${activeTab === 'create' ? 'active' : ''}`}
-            onClick={() => setActiveTab('create')}
-          >
-            Создать портфолио
-          </button>
-         
-        </div>
-
-        {/* View Portfolio Tab */}
-        <div className={`tab-content ${activeTab === 'view' ? 'active' : ''}`}>
-          {currentPortfolio ? (
-            <div className="portfolio-view">
-              <div className="portfolio-hero">
-                <h1>{currentPortfolio.name}</h1>
-                <p>{currentPortfolio.profession}</p>
-              </div>
-              
-              <div className="portfolio-content">
-                <div className="portfolio-sidebar">
-                  <div className="section">
-                    <h2>Контакты</h2>
-                    <p>📧 {currentPortfolio.email}</p>
-                    <p>📞 {currentPortfolio.phone}</p>
-                  </div>
-                  
-                  <div className="section">
-                    <h2>Навыки</h2>
-                    <div className="portfolio-skills">
-                      {currentPortfolio.skills.map((skill, index) => (
-                        <span key={index} className="skill-tag">{skill}</span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="portfolio-main">
-                  <div className="section">
-                    <h2>Обо мне</h2>
-                    <p>{currentPortfolio.about}</p>
-                  </div>
-                  
-                  <div className="section">
-                    <h2>Проекты</h2>
-                    <div className="projects-grid">
-                      {currentPortfolio.projects.map(project => (
-                        <div key={project.id} className="project-card">
-                          <h3>{project.title}</h3>
-                          <p>{project.description}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="portfolio-view">
-              <div className="portfolio-hero">
-                <h1>Добро пожаловать!</h1>
-                <p>Выберите портфолио для просмотра или создайте новое</p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Create Portfolio Tab */}
-        <div className={`tab-content ${activeTab === 'create' ? 'active' : ''}`}>
-          <div className="admin-panel">
-            <h2>Создать новое портфолио</h2>
-            
-            <form onSubmit={handleSubmit}>
-              <div className="form-grid">
-                <div className="form-group">
-                  <label>Имя и Фамилия *</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="form-control"
-                    required
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Профессия *</label>
-                  <input
-                    type="text"
-                    name="profession"
-                    value={formData.profession}
-                    onChange={handleInputChange}
-                    className="form-control"
-                    required
-                  />
-                </div>
-                
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label>Обо мне *</label>
-                  <textarea
-                    name="about"
-                    value={formData.about}
-                    onChange={handleInputChange}
-                    className="form-control"
-                    required
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Email *</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="form-control"
-                    required
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Телефон</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="form-control"
-                  />
-                </div>
-                
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label>Навыки</label>
-                  <div className="skills-input">
-                    <input
-                      type="text"
-                      value={newSkill}
-                      onChange={(e) => setNewSkill(e.target.value)}
-                      className="form-control"
-                      placeholder="Добавить навык"
-                    />
-                    <button type="button" onClick={addSkill} className="btn btn-outline">
-                      Добавить
-                    </button>
-                  </div>
-                  <div className="portfolio-skills" style={{ marginTop: '1rem' }}>
-                    {formData.skills.map((skill, index) => (
-                      <span key={index} className="skill-tag">
-                        {skill}
-                        <button 
-                          type="button"
-                          onClick={() => removeSkill(skill)}
-                          style={{ marginLeft: '0.5rem', background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label>Проекты</label>
-                  <div style={{ marginBottom: '1rem' }}>
-                    <input
-                      type="text"
-                      value={newProject.title}
-                      onChange={(e) => setNewProject(prev => ({ ...prev, title: e.target.value }))}
-                      className="form-control"
-                      placeholder="Название проекта"
-                      style={{ marginBottom: '0.5rem' }}
-                    />
-                    <textarea
-                      value={newProject.description}
-                      onChange={(e) => setNewProject(prev => ({ ...prev, description: e.target.value }))}
-                      className="form-control"
-                      placeholder="Описание проекта"
-                    />
-                    <button type="button" onClick={addProject} className="btn btn-outline" style={{ marginTop: '0.5rem' }}>
-                      Добавить проект
-                    </button>
-                  </div>
-                  
-                  <div className="projects-grid">
-                    {formData.projects.map(project => (
-                      <div key={project.id} className="project-card">
-                        <h4>{project.title}</h4>
-                        <p>{project.description}</p>
-                        <button 
-                          type="button"
-                          onClick={() => removeProject(project.id)}
-                          className="btn btn-outline"
-                          style={{ marginTop: '0.5rem', padding: '0.25rem 0.5rem', fontSize: '0.8rem' }}
-                        >
-                          Удалить
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              
-              <button type="submit" className="btn btn-primary">
-                Создать портфолио
-              </button>
-            </form>
+        {/* 🔍 Поиск */}
+        {activeTab === "list" && (
+          <div style={{ marginBottom: "1rem" }}>
+            <input
+              type="text"
+              placeholder="Поиск по имени или профессии..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{
+                padding: "0.5rem",
+                width: "60%",
+                marginRight: "1rem",
+                borderRadius: "6px",
+              }}
+            />
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              style={{ padding: "0.5rem", borderRadius: "6px" }}
+            >
+              <option value="desc">Новые сверху</option>
+              <option value="asc">Старые сверху</option>
+            </select>
           </div>
-        </div>
+        )}
 
-        {/* Portfolio List Tab */}
-        <div className={`tab-content ${activeTab === 'list' ? 'active' : ''}`}>
-          <h2>Все портфолио ({portfolios.length})</h2>
-          
-          {portfolios.length === 0 ? (
-            <p>Портфолио пока нет. Создайте первое!</p>
-          ) : (
-            <div className="portfolio-list">
-              {portfolios.map(portfolio => (
-                <div key={portfolio.id} className="portfolio-card">
-                  <div className="portfolio-header">
-                    <div className="portfolio-info">
-                      <h3>{portfolio.name}</h3>
-                      <p>{portfolio.profession}</p>
-                      <small>{new Date(portfolio.createdAt).toLocaleDateString()}</small>
+        {/* Список портфолио */}
+        {activeTab === "list" && (
+          <div>
+            <h2>Все портфолио ({filteredPortfolios.length})</h2>
+            {filteredPortfolios.length === 0 ? (
+              <p>Портфолио не найдено.</p>
+            ) : (
+              <div className="portfolio-list">
+                {filteredPortfolios.map((p) => (
+                  <div key={p.id} className="portfolio-card">
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      {p.photo && (
+                        <img
+                          src={p.photo}
+                          alt="Фото"
+                          style={{
+                            width: "60px",
+                            height: "60px",
+                            borderRadius: "50%",
+                            marginRight: "10px",
+                            objectFit: "cover",
+                          }}
+                        />
+                      )}
+                      <div>
+                        <h3>{p.name}</h3>
+                        <p>{p.profession}</p>
+                      </div>
+                    </div>
+
+                    <p>{p.about.substring(0, 80)}...</p>
+                    <div className="portfolio-actions">
+                      <button
+                        onClick={() => viewPortfolio(p)}
+                        className="btn btn-primary"
+                      >
+                        Просмотр
+                      </button>
+                      <button
+                        onClick={() => editPortfolio(p)}
+                        className="btn btn-outline"
+                      >
+                        ✏ Редактировать
+                      </button>
+                      <button
+                        onClick={() => deletePortfolio(p.id)}
+                        className="btn btn-outline"
+                      >
+                        🗑 Удалить
+                      </button>
                     </div>
                   </div>
-                  
-                  <p style={{ marginBottom: '1rem', fontSize: '0.9rem' }}>
-                    {portfolio.about.substring(0, 100)}...
-                  </p>
-                  
-                  <div className="portfolio-skills">
-                    {portfolio.skills.slice(0, 3).map((skill, index) => (
-                      <span key={index} className="skill-tag">{skill}</span>
-                    ))}
-                    {portfolio.skills.length > 3 && (
-                      <span className="skill-tag">+{portfolio.skills.length - 3}</span>
-                    )}
-                  </div>
-                  
-                  <div className="portfolio-actions">
-                    <button 
-                      onClick={() => viewPortfolio(portfolio)}
-                      className="btn btn-primary"
-                      style={{ flex: 1 }}
-                    >
-                      Просмотр
-                    </button>
-                    <button 
-                      onClick={() => deletePortfolio(portfolio.id)}
-                      className="btn btn-outline"
-                    >
-                      Удалить
-                    </button>
-                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Просмотр */}
+        {activeTab === "view" && currentPortfolio && (
+          <div>
+            <div className="portfolio-view">
+              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                {currentPortfolio.photo && (
+                  <img
+                    src={currentPortfolio.photo}
+                    alt="Фото"
+                    style={{
+                      width: "100px",
+                      height: "100px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                    }}
+                  />
+                )}
+                <div>
+                  <h1>{currentPortfolio.name}</h1>
+                  <p>{currentPortfolio.profession}</p>
+                </div>
+              </div>
+
+              <p style={{ marginTop: "1rem" }}>{currentPortfolio.about}</p>
+
+              <h3>Навыки:</h3>
+              <div>
+                {currentPortfolio.skills.map((s, i) => (
+                  <span key={i} className="skill-tag">
+                    {s}
+                  </span>
+                ))}
+              </div>
+
+              <h3>Проекты:</h3>
+              {currentPortfolio.projects.map((proj) => (
+                <div key={proj.id} className="project-card">
+                  <h4>{proj.title}</h4>
+                  <p>{proj.description}</p>
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* Создание / редактирование */}
+        {activeTab === "create" && (
+          <form onSubmit={handleSubmit}>
+            <h2>{editMode ? "Редактировать портфолио" : "Создать портфолио"}</h2>
+
+            <input
+              type="text"
+              name="name"
+              placeholder="Имя и фамилия"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
+            />
+            <input
+              type="text"
+              name="profession"
+              placeholder="Профессия"
+              value={formData.profession}
+              onChange={handleInputChange}
+              required
+            />
+            <textarea
+              name="about"
+              placeholder="Обо мне"
+              value={formData.about}
+              onChange={handleInputChange}
+              required
+            />
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+            />
+            <input
+              type="tel"
+              name="phone"
+              placeholder="Телефон"
+              value={formData.phone}
+              onChange={handleInputChange}
+            />
+            <input
+              type="url"
+              name="photo"
+              placeholder="Ссылка на фото (опционально)"
+              value={formData.photo}
+              onChange={handleInputChange}
+            />
+
+            <h4>Навыки:</h4>
+            <div>
+              <input
+                type="text"
+                value={newSkill}
+                onChange={(e) => setNewSkill(e.target.value)}
+                placeholder="Добавить навык"
+              />
+              <button type="button" onClick={addSkill}>
+                Добавить
+              </button>
+            </div>
+            <div>
+              {formData.skills.map((s, i) => (
+                <span key={i} className="skill-tag">
+                  {s}{" "}
+                  <button
+                    type="button"
+                    onClick={() => removeSkill(s)}
+                    style={{ background: "none", border: "none", color: "red" }}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+
+            <h4>Проекты:</h4>
+            <input
+              type="text"
+              placeholder="Название проекта"
+              value={newProject.title}
+              onChange={(e) =>
+                setNewProject((prev) => ({ ...prev, title: e.target.value }))
+              }
+            />
+            <textarea
+              placeholder="Описание проекта"
+              value={newProject.description}
+              onChange={(e) =>
+                setNewProject((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+            />
+            <button type="button" onClick={addProject}>
+              Добавить проект
+            </button>
+
+            <div>
+              {formData.projects.map((proj) => (
+                <div key={proj.id}>
+                  <h4>{proj.title}</h4>
+                  <p>{proj.description}</p>
+                  <button
+                    type="button"
+                    onClick={() => removeProject(proj.id)}
+                    style={{ color: "red" }}
+                  >
+                    Удалить
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <button type="submit" className="btn btn-primary">
+              {editMode ? "Сохранить изменения" : "Создать"}
+            </button>
+          </form>
+        )}
       </div>
     </div>
-  )
+  );
 }
 
-export default App    
+export default App;
