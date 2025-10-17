@@ -22,7 +22,6 @@ function App() {
   const [newSkill, setNewSkill] = useState("");
   const [newProject, setNewProject] = useState({ title: "", description: "" });
 
-  // Загрузка портфолио из localStorage
   useEffect(() => {
     const savedPortfolios = localStorage.getItem("portfolios");
     if (savedPortfolios) {
@@ -30,7 +29,6 @@ function App() {
     }
   }, []);
 
-  // Сохранение портфолио
   useEffect(() => {
     localStorage.setItem("portfolios", JSON.stringify(portfolios));
   }, [portfolios]);
@@ -81,7 +79,6 @@ function App() {
     e.preventDefault();
 
     if (editMode) {
-      // Обновление существующего
       setPortfolios((prev) =>
         prev.map((p) =>
           p.id === currentPortfolio.id ? { ...p, ...formData } : p
@@ -90,7 +87,6 @@ function App() {
       setEditMode(false);
       alert("Портфолио обновлено!");
     } else {
-      // Создание нового
       const newPortfolio = {
         id: Date.now(),
         ...formData,
@@ -100,7 +96,6 @@ function App() {
       alert("Портфолио успешно создано!");
     }
 
-    // Очистка формы
     setFormData({
       name: "",
       profession: "",
@@ -135,7 +130,6 @@ function App() {
     setActiveTab("create");
   };
 
-  // Поиск и сортировка
   const filteredPortfolios = portfolios
     .filter(
       (p) =>
@@ -153,7 +147,7 @@ function App() {
       <header>
         <div className="container">
           <nav>
-            <div className="logo">🌐 Portfolio Hub</div>
+            <div className="logo">🌐 Портфолио для работадателей</div>
             <ul className="nav-links">
               <li>
                 <a href="#" onClick={() => setActiveTab("list")}>
@@ -176,7 +170,6 @@ function App() {
       </header>
 
       <div className="main-content container">
-        {/* 🔍 Поиск */}
         {activeTab === "list" && (
           <div style={{ marginBottom: "1rem" }}>
             <input
@@ -202,7 +195,6 @@ function App() {
           </div>
         )}
 
-        {/* Список портфолио */}
         {activeTab === "list" && (
           <div>
             <h2>Все портфолио ({filteredPortfolios.length})</h2>
@@ -260,11 +252,10 @@ function App() {
           </div>
         )}
 
-        {/* Просмотр */}
         {activeTab === "view" && currentPortfolio && (
           <div>
             <div className="portfolio-view">
-              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
                 {currentPortfolio.photo && (
                   <img
                     src={currentPortfolio.photo}
@@ -279,33 +270,51 @@ function App() {
                 )}
                 <div>
                   <h1>{currentPortfolio.name}</h1>
-                  <p>{currentPortfolio.profession}</p>
+                  <p style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#555" }}>
+                    {currentPortfolio.profession}
+                  </p>
                 </div>
               </div>
 
-              <p style={{ marginTop: "1rem" }}>{currentPortfolio.about}</p>
-
-              <h3>Навыки:</h3>
-              <div>
-                {currentPortfolio.skills.map((s, i) => (
-                  <span key={i} className="skill-tag">
-                    {s}
-                  </span>
-                ))}
+              <div style={{ marginBottom: "1.5rem" }}>
+                <h3>Обо мне:</h3>
+                <p>{currentPortfolio.about}</p>
               </div>
 
-              <h3>Проекты:</h3>
-              {currentPortfolio.projects.map((proj) => (
-                <div key={proj.id} className="project-card">
-                  <h4>{proj.title}</h4>
-                  <p>{proj.description}</p>
+              <div style={{ marginBottom: "1.5rem" }}>
+                <h3>Контактная информация:</h3>
+                <p><strong>Email:</strong> {currentPortfolio.email}</p>
+                <p><strong>Телефон:</strong> {currentPortfolio.phone}</p>
+              </div>
+
+              <div style={{ marginBottom: "1.5rem" }}>
+                <h3>Навыки:</h3>
+                <div>
+                  {currentPortfolio.skills.map((s, i) => (
+                    <span key={i} className="skill-tag">
+                      {s}
+                    </span>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              <div style={{ marginBottom: "1.5rem" }}>
+                <h3>Проекты:</h3>
+                {currentPortfolio.projects.length > 0 ? (
+                  currentPortfolio.projects.map((proj) => (
+                    <div key={proj.id} className="project-card">
+                      <h4>{proj.title}</h4>
+                      <p>{proj.description}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p>Проекты не добавлены</p>
+                )}
+              </div>
             </div>
           </div>
         )}
 
-        {/* Создание / редактирование */}
         {activeTab === "create" && (
           <form onSubmit={handleSubmit}>
             <h2>{editMode ? "Редактировать портфолио" : "Создать портфолио"}</h2>
