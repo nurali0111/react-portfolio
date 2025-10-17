@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 
-
 function App() {
   const [activeTab, setActiveTab] = useState("home");
   const [portfolios, setPortfolios] = useState([]);
@@ -9,8 +8,6 @@ function App() {
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState("desc");
   const [darkMode, setDarkMode] = useState(false);
-  const [exportData, setExportData] = useState("");
-  const [importData, setImportData] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -147,34 +144,6 @@ function App() {
     setActiveTab("create");
   };
 
-  const exportPortfolios = () => {
-    const data = JSON.stringify(portfolios, null, 2);
-    setExportData(data);
-    
-    const blob = new Blob([data], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "portfolios.json";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const importPortfolios = () => {
-    try {
-      const parsedData = JSON.parse(importData);
-      if (Array.isArray(parsedData)) {
-        setPortfolios(parsedData);
-        setImportData("");
-        alert("Портфолио успешно импортированы!");
-      } else {
-        alert("Неверный формат данных");
-      }
-    } catch (error) {
-      alert("Ошибка при импорте данных");
-    }
-  };
-
   const duplicatePortfolio = (portfolio) => {
     const duplicated = {
       ...portfolio,
@@ -186,6 +155,14 @@ function App() {
     alert("Портфолио дублировано!");
   };
 
+  const clearAllPortfolios = () => {
+    if (confirm("Вы уверены, что хотите удалить все портфолио? Это действие нельзя отменить.")) {
+      setPortfolios([]);
+      setCurrentPortfolio(null);
+      alert("Все портфолио удалены!");
+    }
+  };
+
   const filteredPortfolios = portfolios
     .filter(
       (p) =>
@@ -193,11 +170,14 @@ function App() {
         p.profession.toLowerCase().includes(search.toLowerCase()) ||
         p.skills.some(skill => skill.toLowerCase().includes(search.toLowerCase()))
     )
-    .sort((a, b) =>
-      sortOrder === "desc"
+    .sort((a, b) => {
+      if (sortOrder === "name") {
+        return a.name.localeCompare(b.name);
+      }
+      return sortOrder === "desc"
         ? new Date(b.createdAt) - new Date(a.createdAt)
-        : new Date(a.createdAt) - new Date(b.createdAt)
-    );
+        : new Date(a.createdAt) - new Date(b.createdAt);
+    });
 
   return (
     <div className={`app ${darkMode ? "dark" : "light"}`}>
@@ -220,19 +200,26 @@ function App() {
                 </a>
               </li>
               <li className={activeTab === "create" ? "active" : ""}>
-                <a href="#" onClick={() => { setActiveTab("create"); setEditMode(false); setFormData({
-                  name: "", profession: "", about: "", email: "", phone: "", photo: "", skills: [], projects: []
-                }); }}>
+                <a href="#" onClick={() => { 
+                  setActiveTab("create"); 
+                  setEditMode(false); 
+                  setFormData({
+                    name: "", profession: "", about: "", email: "", phone: "", photo: "", skills: [], projects: []
+                  }); 
+                }}>
                   Создать
                 </a>
               </li>
             </ul>
-            <button 
-              className="theme-toggle"
-              onClick={() => setDarkMode(!darkMode)}
-            >
-              {darkMode ? "☀️" : "🌙"}
-            </button>
+            <div className="header-controls">
+              <button 
+                className="theme-toggle"
+                onClick={() => setDarkMode(!darkMode)}
+                title={darkMode ? "Светлая тема" : "Темная тема"}
+              >
+                {darkMode ? "☀️" : "🌙"}
+              </button>
+            </div>
           </nav>
         </div>
       </header>
@@ -262,13 +249,13 @@ function App() {
                   className="btn btn-primary btn-large"
                   onClick={() => setActiveTab("create")}
                 >
-                  Создать портфолио
+                  🚀 Создать портфолио
                 </button>
                 <button 
                   className="btn btn-outline btn-large"
                   onClick={() => setActiveTab("list")}
                 >
-                  Посмотреть примеры
+                  👀 Посмотреть примеры
                 </button>
               </div>
             </div>
@@ -297,34 +284,28 @@ function App() {
                   <option value="asc">Старые сверху</option>
                   <option value="name">По имени (А-Я)</option>
                 </select>
-                <button 
-                  className="btn btn-outline"
-                  onClick={exportPortfolios}
-                >
-                  📤 Экспорт
-                </button>
+                {portfolios.length > 0 && (
+                  <button 
+                    className="btn btn-danger"
+                    onClick={clearAllPortfolios}
+                  >
+                    🗑️ Очистить все
+                  </button>
+                )}
               </div>
-            </div>
-
-            <div className="import-section">
-              <textarea
-                placeholder="Вставьте JSON данные для импорта..."
-                value={importData}
-                onChange={(e) => setImportData(e.target.value)}
-                rows={3}
-              />
-              <button 
-                className="btn btn-secondary"
-                onClick={importPortfolios}
-              >
-                📥 Импорт
-              </button>
             </div>
 
             {filteredPortfolios.length === 0 ? (
               <div className="empty-state">
+                <div className="empty-icon">📁</div>
                 <h3>Портфолио не найдены</h3>
                 <p>Попробуйте изменить параметры поиска или создайте новое портфолио</p>
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => setActiveTab("create")}
+                >
+                  Создать первое портфолио
+                </button>
               </div>
             ) : (
               <div className="portfolio-grid">
@@ -379,12 +360,6 @@ function App() {
                       >
                         📋 Копировать
                       </button>
-                      <button
-                        onClick={() => deletePortfolio(p.id)}
-                        className="btn btn-danger"
-                      >
-                        🗑️
-                      </button>
                     </div>
                   </div>
                 ))}
@@ -401,7 +376,7 @@ function App() {
                   className="btn btn-outline back-btn"
                   onClick={() => setActiveTab("list")}
                 >
-                  ← Назад
+                  ← Назад к списку
                 </button>
                 <div className="header-actions">
                   <button
@@ -414,7 +389,7 @@ function App() {
                     onClick={() => duplicatePortfolio(currentPortfolio)}
                     className="btn btn-outline"
                   >
-                    📋 Копировать
+                    📋 Создать копию
                   </button>
                 </div>
               </div>
@@ -432,7 +407,7 @@ function App() {
                   <p className="hero-profession">{currentPortfolio.profession}</p>
                   <div className="contact-info">
                     <span>📧 {currentPortfolio.email}</span>
-                    <span>📞 {currentPortfolio.phone}</span>
+                    {currentPortfolio.phone && <span>📞 {currentPortfolio.phone}</span>}
                   </div>
                 </div>
               </div>
@@ -495,7 +470,7 @@ function App() {
                   <input
                     type="text"
                     name="profession"
-                    placeholder="CyberSecurity Specialist"
+                    placeholder="Sybersecurity Specialist"
                     value={formData.profession}
                     onChange={handleInputChange}
                     required
@@ -644,7 +619,7 @@ function App() {
 
       <footer className="footer">
         <div className="container">
-          <p>© 2024 PortfolioHub. Все права защищены.</p>
+          <p>© by Alymbekov Nurali | Bekzat Rakhmatzhanov</p>
         </div>
       </footer>
     </div>
